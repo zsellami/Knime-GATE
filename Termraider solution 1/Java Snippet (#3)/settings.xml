@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="scriptImports" type="xstring" value="// Your custom imports:%%00010import org.knime.core.node.NodeLogger;%%00010import gate.Corpus;%%00010import gate.CorpusController;%%00010import gate.Factory;%%00010import gate.FeatureMap;%%00010import gate.Gate;%%00010import gate.termraider.bank.AbstractTermbank;%%00010import gate.termraider.util.Term;%%00010import gate.util.GateException;%%00010import gate.util.persistence.PersistenceManager;%%00010import java.io.File;%%00010import java.io.IOException;%%00010import java.net.URL;%%00010import java.net.URLDecoder;%%00010import java.util.List;%%00010import java.util.ArrayList;%%00010import org.apache.commons.lang.StringEscapeUtils;%%00010"/>
+<entry key="scriptFields" type="xstring" value="// Your custom variables:%%00010private static CorpusController trApp = null;%%00010private static Corpus corpus = null;%%00010private static final NodeLogger logger = NodeLogger.getLogger(JSnippet.class);%%00010public static void initTermRaider(String gappPath) throws IOException, GateException {%%00010%%00009%%00009// initialise the GATE library%%00010%%00009%%00009logger.error(&quot;Initialising GATE...&quot;);%%00010%%00009%%00009//Gate.setPluginsHome(new File(&quot;/home/zied/knime-workspace/GATE LIB/plugins/&quot;));%%00010%%00009%%00009Gate.init();%%00010%%00010%%00009%%00009// Initialize GATE%%00010%%00009%%00009File gateHome = Gate.getGateHome();%%00010%%00009%%00009//Gate.setPluginsHome(new File(&quot;/home/zied/GATE_Developer_8.1/plugins&quot;));%%00010%%00009%%00009%%00010%%00009%%00009logger.error(&quot;...GATE initialised&quot;);%%00010%%00010%%00009%%00009// Load TermRaider plugin%%00010%%00009%%00009//File termRaiderPlugin = new File(Gate.getPluginsHome(), &quot;TermRaider&quot;);%%00010%%00009%%00009//File gappFile = new File(new File(termRaiderPlugin, &quot;applications&quot;), &quot;termraider-eng.gapp&quot;);%%00010%%00009%%00009// CorpusController trApp =%%00010%%00009%%00009// (CorpusController)PersistenceManager.loadObjectFromFile(gappFile);%%00010%%00009%%00009trApp = (CorpusController) PersistenceManager.loadObjectFromFile(new File(gappPath));%%00010%%00009%%00009corpus = (Corpus) Factory.createResource(&quot;gate.corpora.CorpusImpl&quot;);%%00010%%00009%%00009trApp.init();%%00010%%00009%%00009logger.error(&quot;TermRaider loaded successfully!!!&quot;);%%00010%%00009}%%00010%%00010%%00009public void loadDocumentInCorpus(String path) throws IOException, GateException {%%00010%%00009%%00009corpus.clear();%%00010%%00009%%00009path = URLDecoder.decode(path, &quot;UTF-8&quot;);%%00010%%00009%%00009URL u = new File(path).toURL();%%00010%%00010%%00009%%00009FeatureMap params = Factory.newFeatureMap();%%00010%%00009%%00009params.put(&quot;sourceUrl&quot;, u);%%00010%%00009%%00009params.put(&quot;preserveOriginalContent&quot;, new Boolean(true));%%00010%%00009%%00009params.put(&quot;collectRepositioningInfo&quot;, new Boolean(true));%%00010%%00009%%00009// Out.prln(&quot;Creating doc for &quot; + u);%%00010%%00009%%00009gate.Document doc = (gate.Document) Factory.createResource(&quot;gate.corpora.DocumentImpl&quot;, params);%%00010%%00009%%00009corpus.add(doc);%%00010%%00009}%%00010%%00010%%00009public static void runTermraider() throws GateException {%%00010%%00009%%00009//trApp.init();%%00010%%00009%%00009trApp.setCorpus(corpus);%%00010%%00009%%00009trApp.execute();%%00010%%00009%%00009System.out.println(&quot;TermRaider executed successfully!!!&quot;);%%00010%%00009}%%00010%%00010%%00009public static List&lt;String&gt; getTermraiderResults() throws GateException {%%00010%%00009%%00009List&lt;String&gt; results = new ArrayList&lt;String&gt;();%%00010%%00009%%00009AbstractTermbank tb1 = (AbstractTermbank) Gate.getCreoleRegister()%%00010%%00009%%00009%%00009%%00009.getLrInstances(&quot;gate.termraider.bank.TfIdfTermbank&quot;).get(0);%%00010%%00009%%00009AbstractTermbank tb2 = (AbstractTermbank) Gate.getCreoleRegister()%%00010%%00009%%00009%%00009%%00009.getLrInstances(&quot;gate.termraider.bank.AnnotationTermbank&quot;).get(0);%%00010%%00009%%00009AbstractTermbank tb3 = (AbstractTermbank) Gate.getCreoleRegister()%%00010%%00009%%00009%%00009%%00009.getLrInstances(&quot;gate.termraider.bank.HyponymyTermbank&quot;).get(0);%%00010%%00010%%00009%%00009%%00010%%00009%%00009double threshold1 = 0;%%00010%%00009%%00009double threshold2 = 0;%%00010%%00009%%00009double threshold3 = 0;%%00010%%00010%%00009%%00009%%00010%%00009%%00009results = getResults(tb1, threshold1);%%00010%%00009%%00009Gate.getCreoleRegister().remove(tb1);%%00010%%00009%%00009Gate.getCreoleRegister().remove(tb2);%%00010%%00009%%00009Gate.getCreoleRegister().remove(tb3);%%00010%%00009%%00009%%00010%%00009%%00009logger.error(&quot;Results done!!!&quot;);%%00010%%00009%%00009return results;%%00010%%00009}%%00010%%00010%%00009public static List&lt;String&gt; getResults(AbstractTermbank bank, Number threshold) throws GateException {%%00010%%00009%%00009%%00010%%00010%%00009%%00009List&lt;Term&gt; sortedTerms = bank.getTermsByDescendingScore();%%00010%%00009%%00009List&lt;String&gt; results = new ArrayList&lt;String&gt;();%%00010%%00010%%00009%%00009for (Term term : sortedTerms) {%%00010%%00009%%00009%%00009Number score = bank.getDefaultScores().get(term);%%00010%%00009%%00009%%00009if (score.doubleValue() &gt;= threshold.doubleValue()) {%%00010%%00009%%00009%%00009%%00009logger.error(getRowResult(bank, term));%%00010%%00009%%00009%%00009%%00009results.add(getRowResult(bank, term));%%00010%%00009%%00009%%00009%%00009%%00010%%00010%%00009%%00009%%00009} else { // the rest must be lower%%00010%%00009%%00009%%00009%%00009break;%%00010%%00009%%00009%%00009}%%00010%%00009%%00009}%%00010%%00010%%00009%%00009return results;%%00010%%00010%%00009}%%00010%%00010%%00009/*public static String getRowResult(AbstractTermbank bank, Term term) {%%00010%%00009%%00009StringBuilder sb = new StringBuilder();%%00010%%00009%%00009sb.append(StringEscapeUtils.escapeCsv(term.getTermString()));%%00010%%00009%%00009sb.append(',').append(StringEscapeUtils.escapeCsv(term.getLanguageCode()));%%00010%%00009%%00009sb.append(',').append(StringEscapeUtils.escapeCsv(term.getType()));%%00010%%00009%%00009for (ScoreType type : bank.getScoreTypes()) {%%00010%%00009%%00009%%00009sb.append(',').append(StringEscapeUtils.escapeCsv(bank.getScore(type, term).toString()));%%00010%%00009%%00009}%%00010%%00009%%00009StringBuilder doc = new StringBuilder();%%00010%%00009%%00009for (String document : bank.getDocumentsForTerm(term)) {%%00010%%00009%%00009%%00009document = document.substring(0, document.lastIndexOf(&quot; [&quot;));%%00010%%00009%%00009%%00009doc.append(document + &quot;, &quot; + sb.toString());%%00010%%00009%%00009}%%00010%%00009%%00009return sb.toString();%%00010%%00009}*/%%00010%%00010%%00009public static String getRowResult(AbstractTermbank bank, Term term) {%%00010%%00009%%00009StringBuilder sb = new StringBuilder();%%00010%%00009%%00009sb.append(StringEscapeUtils.escapeCsv(term.getTermString()));%%00010%%00009%%00009//sb.append(',').append(StringEscapeUtils.escapeCsv(term.getLanguageCode()));%%00010%%00009%%00009sb.append(&quot;\t&quot;).append(StringEscapeUtils.escapeCsv(term.getType()));%%00010%%00009%%00009/*for (ScoreType type : bank.getScoreTypes()) {%%00010%%00009%%00009%%00009sb.append(',').append(StringEscapeUtils.escapeCsv(bank.getScore(type, term).toString()));%%00010%%00009%%00009}%%00010%%00009%%00009StringBuilder doc = new StringBuilder();%%00010%%00009%%00009for (String document : bank.getDocumentsForTerm(term)) {%%00010%%00009%%00009%%00009document = document.substring(0, document.lastIndexOf(&quot; [&quot;));%%00010%%00009%%00009%%00009doc.append(document + &quot;, &quot; + sb.toString());%%00010%%00009%%00009}*/%%00010%%00009%%00009return sb.toString() ;%%00010%%00009}%%00010"/>
+<entry key="scriptBody" type="xstring" value="// Enter your code here:%%00010logger.error(ROWID+&quot;/&quot;+ROWINDEX+&quot;/&quot;+ROWCOUNT);%%00010%%00009%%00009%%00010try {%%00010%%00009if(ROWINDEX==0){%%00010%%00009%%00009initTermRaider(&quot;/home/zied/knime-workspace/GATE LIB/termraider.gapp&quot;);%%00010%%00009}%%00010%%00009logger.error(&quot;Loading document in corpus!!!&quot;);%%00010%%00009loadDocumentInCorpus(c_Filepath);%%00010%%00009runTermraider();%%00010%%00009%%00010%%00009%%00010%%00010%%00009%%00009} catch (Exception e) {%%00010%%00009%%00009%%00009e.printStackTrace();%%00010%%00009%%00009%%00009%%00010%%00009%%00009%%00009logger.error(e.toString());%%00010%%00009%%00009}%%00010%%00009%%00009try {%%00010%%00009%%00009%%00009logger.error(&quot;Results !!!&quot;);%%00010%%00009%%00009%%00009List&lt;String&gt; namedEntities = getTermraiderResults();%%00010%%00009%%00009%%00009%%00010%%00009%%00009%%00009out_term_result = &quot;&quot;;%%00010%%00009%%00009%%00009for(String ne : namedEntities){%%00010%%00009%%00009%%00009%%00009%%00010%%00009%%00009%%00009%%00009out_term_result = out_term_result + ne +&quot;\n&quot;;%%00010%%00009%%00009%%00009%%00009%%00010%%00009%%00009%%00009}%%00010%%00009%%00009%%00009%%00010%%00009%%00009%%00009%%00010%%00009%%00009} catch (Exception e) {%%00010%%00009%%00009%%00009e.printStackTrace();%%00010%%00009%%00009%%00009logger.error(e.toString());%%00010%%00009%%00009}%%00010%%00010%%00010%%00010%%00010%%00010%%00010"/>
+<config key="jarFiles">
+<entry key="array-size" type="xint" value="48"/>
+<entry key="0" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/ant-1.9.3.jar"/>
+<entry key="1" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/ant-launcher-1.9.3.jar"/>
+<entry key="2" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/aopalliance-1.0.jar"/>
+<entry key="3" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/apache-mime4j-core-0.7.2.jar"/>
+<entry key="4" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/apache-mime4j-dom-0.7.2.jar"/>
+<entry key="5" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/bcmail-jdk15-1.45.jar"/>
+<entry key="6" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/bcprov-jdk15-1.45.jar"/>
+<entry key="7" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/commons-codec-1.9.jar"/>
+<entry key="8" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/commons-compress-1.8.1.jar"/>
+<entry key="9" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/commons-io-2.4.jar"/>
+<entry key="10" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/commons-lang-2.6.jar"/>
+<entry key="11" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/commons-logging-1.1.3.jar"/>
+<entry key="12" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/flying-saucer-core-9.0.4.jar"/>
+<entry key="13" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/fontbox-1.8.8.jar"/>
+<entry key="14" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/gate-asm-5.0.3.jar"/>
+<entry key="15" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/gate-compiler-jdt-4.3.2-P20140317-1600.jar"/>
+<entry key="16" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/gate-termraider.jar"/>
+<entry key="17" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/gate.jar"/>
+<entry key="18" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/hamcrest-core-1.3.jar"/>
+<entry key="19" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/ivy-2.3.0.jar"/>
+<entry key="20" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/jackson-annotations-2.3.0.jar"/>
+<entry key="21" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/jackson-core-2.3.2.jar"/>
+<entry key="22" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/jackson-databind-2.3.2.jar"/>
+<entry key="23" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/java-getopt-1.0.13.jar"/>
+<entry key="24" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/jaxen-1.1.6.jar"/>
+<entry key="25" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/jdom-1.1.3.jar"/>
+<entry key="26" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/jempbox-1.8.8.jar"/>
+<entry key="27" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/joda-time-2.9.2.jar"/>
+<entry key="28" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/junit-4.11.jar"/>
+<entry key="29" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/log4j-1.2.17.jar"/>
+<entry key="30" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/nekohtml-1.9.14.jar"/>
+<entry key="31" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/pdfbox-1.8.8.jar"/>
+<entry key="32" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/poi-3.11.jar"/>
+<entry key="33" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/poi-ooxml-3.11.jar"/>
+<entry key="34" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/poi-ooxml-schemas-3.11.jar"/>
+<entry key="35" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/poi-scratchpad-3.11.jar"/>
+<entry key="36" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/spring-aop-2.5.6.SEC01.jar"/>
+<entry key="37" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/spring-beans-2.5.6.SEC01.jar"/>
+<entry key="38" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/spring-core-2.5.6.SEC01.jar"/>
+<entry key="39" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/stax2-api-3.1.1.jar"/>
+<entry key="40" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/tika-core-1.7.jar"/>
+<entry key="41" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/tika-parsers-1.7.jar"/>
+<entry key="42" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/woodstox-core-lgpl-4.2.0.jar"/>
+<entry key="43" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/xercesImpl-2.9.1.jar"/>
+<entry key="44" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/xmlbeans-2.6.0.jar"/>
+<entry key="45" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/xmlunit-1.5.jar"/>
+<entry key="46" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/xpp3-1.1.4c.jar"/>
+<entry key="47" type="xstring" value="/home/zied/knime-workspace/GATE LIB/lib/xstream-1.4.7.jar"/>
+</config>
+<config key="outCols">
+<entry key="array-size" type="xint" value="1"/>
+<config key="0">
+<entry key="Name" type="xstring" value="out_term_result"/>
+<entry key="JavaName" type="xstring" value="out_term_result"/>
+<entry key="JavaType" type="xstring" value="java.lang.String"/>
+<config key="Type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+<entry key="replaceExisting" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="outVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="inCols">
+<entry key="array-size" type="xint" value="1"/>
+<config key="0">
+<entry key="Name" type="xstring" value="File path"/>
+<entry key="JavaName" type="xstring" value="c_Filepath"/>
+<entry key="JavaType" type="xstring" value="java.lang.String"/>
+<config key="Type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+</config>
+<config key="inVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="version" type="xstring" value="version 1.x"/>
+<entry key="templateUUID" type="xstring" isnull="true" value=""/>
+<entry key="runOnExecute" type="xboolean" value="false"/>
+</config>
+<config key="nodeAnnotation">
+<entry key="text" type="xstring" value="Termraider"/>
+<entry key="bgcolor" type="xint" value="16777215"/>
+<entry key="x-coordinate" type="xint" value="317"/>
+<entry key="y-coordinate" type="xint" value="119"/>
+<entry key="width" type="xint" value="126"/>
+<entry key="height" type="xint" value="17"/>
+<entry key="alignment" type="xstring" value="CENTER"/>
+<entry key="borderSize" type="xint" value="0"/>
+<entry key="borderColor" type="xint" value="16777215"/>
+<entry key="defFontSize" type="xint" value="10"/>
+<entry key="annotation-version" type="xint" value="20151123"/>
+<config key="styles"/>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="EXECUTED"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.jsnippet.JavaSnippetNodeFactory"/>
+<entry key="node-name" type="xstring" value="Java Snippet"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME Java Snippet Nodes"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.jsnippets"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME GmbH, Konstanz, Germany"/>
+<entry key="node-bundle-version" type="xstring" value="3.2.0.v201606201918"/>
+<entry key="node-feature-name" type="xstring" value="KNIME Core"/>
+<entry key="node-feature-symbolic-name" type="xstring" value="org.knime.features.base.feature.group"/>
+<entry key="node-feature-vendor" type="xstring" value="KNIME GmbH, Konstanz, Germany"/>
+<entry key="node-feature-version" type="xstring" value="3.2.1.v201608190927"/>
+<config key="factory_settings"/>
+<entry key="name" type="xstring" value="Java Snippet"/>
+<entry key="hasContent" type="xboolean" value="true"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_spec_class" type="xstring" value="org.knime.core.data.DataTableSpec"/>
+<entry key="port_object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+<entry key="port_object_summary" type="xstring" value="Rows: 9, Cols: 3"/>
+<entry key="port_dir_location" type="xstring" value="port_1"/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" value="ce829c12-46a5-4c91-837e-c334f6e5b1aa"/>
+</config>
+</config>

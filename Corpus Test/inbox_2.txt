@@ -1,0 +1,7 @@
+scholtes-d
+sccobb@srpnet.com
+isas@wscc.com
+
+
+E-Tag 1.7 Spec Concerns
+ISAS Members and Interested Parties,  Last week, Raymond Vojdani raised some very valid concerns about the E-Tag 1.7 Specification. SRP found some time to research these issues. Our comments are attached.  Raymond, Thanks for bringing these issues to the WSCC's attention.
